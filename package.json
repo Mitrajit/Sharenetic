@@ -1,0 +1,22 @@
+{
+  "name": "p2p-messeging",
+  "version": "1.0.0",
+  "description": "A messeging service that connects peer to peer using webRTC and uses websockets for signalling initial connection.",
+  "main": "backend.js",
+  "dependencies": {
+    "bufferutil": "^4.0.3",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "utf-8-validate": "^5.0.5",
+    "uuid": "^8.3.2",
+    "ws": "^7.5.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node ./backend/backend.js",
+    "dev": "nodemon ./backend/backend.js",
+    "debug": "nodemon --inspect ./backend/backend.js"
+  },
+  "author": "Mitrajit Chandra Chandra",
+  "license": "MIT"
+}
