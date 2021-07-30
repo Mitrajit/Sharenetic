@@ -27,7 +27,15 @@
 
         <div class="mb-3">
             <label for="formFileMultiple" class="form-label">Multiple files input example</label>
-            <input class="form-control" type="file" id="file" multiple>
+            <input class="form-control" type="file" id="file" multiple><!--webkitdirectory mozdirectory>-->
+            <button type="button" class="btn btn-primary my-lg-3">Send</button>
+        </div>
+        <div>
+            <!-- <div class="progress-bar" role="progressbar" style="width: 25%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" id="sendProgress"></div> -->
+            <div class="label">Send progress: </div>
+            <progress id="sendProgress" max="100" value="0" class="w-100"></progress>
+            <div class="label">Receive progress: </div>
+            <progress id="receiveProgress" max="100" value="0" class="w-100"></progress>
         </div>
     </div>
 
