@@ -19,11 +19,15 @@ function connect() {
     else {
       console.log(mes);
       if (mes.answer) {
+        console.log("ANSWER");
+        console.log(mes.answer);
         const remoteDesc = new RTCSessionDescription(JSON.parse(mes.answer));
         await peerConnection.setRemoteDescription(remoteDesc);
         console.log("remote desc set");
       }
       else if (mes.offer) {
+        console.log("OFFER");
+        console.log(mes.offer);
         const remoteDesc = new RTCSessionDescription(JSON.parse(mes.offer));
         peerConnection.setRemoteDescription(remoteDesc);
         console.log("remote desc set");
@@ -103,11 +107,14 @@ function onReceiveMessageCallback(event) {
 }
 
 // Send file
-const BYTES_PER_CHUNK = 1200;
+const BYTES_PER_CHUNK = 16 * 1024; // 16KB
+const BUFFER_FULL_THRESHOLD = 15 * 1024 * 1024; //15MB
 var file;
 var currentChunk;
 var fileInput = document.querySelector('input#file');
 var fileReader = new FileReader();
+var webRTCMessageQueue = [];
+let webRTCPaused = false;
 
 function readNextChunk() {
   var start = BYTES_PER_CHUNK * currentChunk;
@@ -115,20 +122,48 @@ function readNextChunk() {
   fileReader.readAsArrayBuffer(file.slice(start, end));
 }
 
+function sendMessageQueued() {
+  webRTCPaused = false;
+  let message = webRTCMessageQueue.shift();
+
+  while (message) {
+    if (sendChannel.bufferedAmount && sendChannel.bufferedAmount > BUFFER_FULL_THRESHOLD) {
+      webRTCPaused = true;
+      webRTCMessageQueue.unshift(message);
+
+      const listener = () => {
+        sendChannel.removeEventListener('bufferedamountlow', listener);
+        sendMessageQueued();
+      };
+
+      sendChannel.addEventListener('bufferedamountlow', listener);
+      return;
+    }
+
+    try {
+      sendChannel.send(message);
+      sendprogressbar.value += BYTES_PER_CHUNK;
+      if (sendprogressbar.value >= sendprogressbar.max)
+        sendprogressbar.value = 0;
+      message = webRTCMessageQueue.shift();
+    } catch (error) {
+      throw new Error(`Error send message, reason: ${error.name} - ${error.message}`);
+    }
+  }
+}
+
 fileReader.onload = function () {
-  sendChannel.send(fileReader.result);
+  webRTCMessageQueue.push(fileReader.result);
+  sendMessageQueued();
   currentChunk++;
-  sendprogressbar.max = file.size;
-  sendProgress.value += BYTES_PER_CHUNK;
   if (BYTES_PER_CHUNK * currentChunk < file.size) {
     readNextChunk();
   }
-  else
-    sendProgress.value = 0;
 };
 
 fileInput.addEventListener('change', function () {
   file = fileInput.files[0];
+  sendprogressbar.max = file.size;
   currentChunk = 0;
   // send some metadata about our file
   // to the receiver
