@@ -143,8 +143,11 @@ function sendMessageQueued() {
     try {
       sendChannel.send(message);
       sendprogressbar.value += BYTES_PER_CHUNK;
-      if (sendprogressbar.value >= sendprogressbar.max)
+      if (sendprogressbar.value >= sendprogressbar.max) {
         sendprogressbar.value = 0;
+        clearInterval(statsUpdateInterval);
+        sendButton.disabled = false;
+      }
       message = webRTCMessageQueue.shift();
     } catch (error) {
       throw new Error(`Error send message, reason: ${error.name} - ${error.message}`);
@@ -161,10 +164,14 @@ fileReader.onload = function () {
   }
 };
 
-fileInput.addEventListener('change', function () {
+const sendButton = document.getElementById('Send');
+sendButton.addEventListener('click', function () {
   file = fileInput.files[0];
   sendprogressbar.max = file.size;
   currentChunk = 0;
+  timestampPrev = new Date().getTime();
+  statsUpdateInterval = stats();
+  this.disabled=true;
   // send some metadata about our file
   // to the receiver
   sendChannel.send(JSON.stringify({
@@ -185,6 +192,8 @@ function startDownload(data) {
   incomingFileInfo = JSON.parse(data.toString());
   incomingFileData = [];
   bytesReceived = 0;
+  timestampPrev = new Date().getTime();
+  statsUpdateInterval = stats();
   downloadInProgress = true;
   console.log('incoming file <b>' + incomingFileInfo.fileName + '</b> of ' + incomingFileInfo.fileSize + ' bytes');
   receiveprogressbar.max = incomingFileInfo.fileSize;
@@ -208,11 +217,43 @@ function endDownload() {
   anchor.download = incomingFileInfo.fileName;
   anchor.textContent = 'Click to download';
   receiveprogressbar.value = 0;
+  clearInterval(statsUpdateInterval);
   if (anchor.click) {
     anchor.click();
   } else {
     let evt = document.createEvent('MouseEvents');
     evt.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
     anchor.dispatchEvent(evt);
+  }
+}
+
+// display bitrate statistics.
+var timestampPrev, RTCbytesRecPrev = 0, RTCbytesSentPrev;
+const upload_spd = document.getElementById('upload-spd');
+const download_spd = document.getElementById('download-spd');
+const stats = () => setInterval(displayStats, 500);
+var statsUpdateInterval;
+async function displayStats() {
+  if (peerConnection && peerConnection.iceConnectionState === 'connected') {
+    const stats = await peerConnection.getStats();
+    let activeCandidatePair;
+    stats.forEach(report => {
+      if (report.type === 'transport') {
+        activeCandidatePair = stats.get(report.selectedCandidatePairId);
+      }
+    });
+    if (activeCandidatePair) {
+      if (timestampPrev === activeCandidatePair.timestamp) {
+        return;
+      }
+      // calculate current bitrate
+      const RTCbytesRecNow = activeCandidatePair.bytesReceived;
+      const RTCbytesSentNow = activeCandidatePair.bytesSent;
+      download_spd.innerText = `${((RTCbytesRecNow - RTCbytesRecPrev) / (activeCandidatePair.timestamp - timestampPrev) / 1024).toFixed(2)} MB/s`;
+      upload_spd.innerText = `${((RTCbytesSentNow - RTCbytesSentPrev) / (activeCandidatePair.timestamp - timestampPrev) / 1024).toFixed(2)} MB/s`;
+      timestampPrev = activeCandidatePair.timestamp;
+      RTCbytesRecPrev = RTCbytesRecNow;
+      RTCbytesSentPrev = RTCbytesSentNow;
+    }
   }
 }

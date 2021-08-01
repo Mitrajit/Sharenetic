@@ -28,13 +28,13 @@
         <div class="mb-3">
             <label for="formFileMultiple" class="form-label">Multiple files input example</label>
             <input class="form-control" type="file" id="file" multiple><!--webkitdirectory mozdirectory>-->
-            <button type="button" class="btn btn-primary my-lg-3">Send</button>
+            <button type="button" class="btn btn-primary my-lg-3" id="Send">Send</button>
         </div>
         <div>
             <!-- <div class="progress-bar" role="progressbar" style="width: 25%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" id="sendProgress"></div> -->
-            <div class="label">Send progress: </div>
+            <div class="label">Send progress: <span id="upload-spd"></span></div>
             <progress id="sendProgress" max="100" value="0" class="w-100"></progress>
-            <div class="label">Receive progress: </div>
+            <div class="label">Receive progress: <span id="download-spd"></span></div>
             <progress id="receiveProgress" max="100" value="0" class="w-100"></progress>
         </div>
     </div>
@@ -46,6 +46,7 @@
         integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
         crossorigin="anonymous"></script>
     <script src="assets/js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/feross/simple-peer@9.11.0/simplepeer.min.js"></script>
     <script src="assets/js/RTCconnect.js"></script>
     <!-- Option 2: Separate Popper and Bootstrap JS -->
     <!--
