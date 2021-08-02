@@ -73,7 +73,7 @@ peerConnection.onicecandidate = (event) => {
 
 peerConnection.addEventListener('connectionstatechange', event => {
   if (peerConnection.connectionState === 'connected') {
-    console.log("PEER REALLY CONNECTED");
+    changeModal({ title: "Peer Connected", body: `Connected to ${Recipient.value}` });
   }
 });
 
@@ -97,8 +97,24 @@ function onReceiveChannelStateChange() {
   console.log(`Receive channel state is: ${readyState}`);
 }
 function onReceiveMessageCallback(event) {
-  if (typeof (event.data) == "string")
+  if (typeof (event.data) == "string") {
     console.log(event.data);
+    let data = JSON.parse(event.data);
+    if (data.confirmed != undefined) {
+      if (data.confirmed) {
+        readNextChunk();
+      }
+      else {
+        clearInterval(statsUpdateInterval);
+        sendButton.disabled = false;
+        changeModal({ title: "File Rejected", body: "File to be sent was failed" });
+      }
+      return;
+    }
+    else
+      changeModal({ title: "Receive request", body: `Do you want to download ${data.fileName}`, confirm: true });
+
+  }
   if (downloadInProgress === false) {
     startDownload(event.data);
   } else {
@@ -171,14 +187,13 @@ sendButton.addEventListener('click', function () {
   currentChunk = 0;
   timestampPrev = new Date().getTime();
   statsUpdateInterval = stats();
-  this.disabled=true;
+  this.disabled = true;
   // send some metadata about our file
   // to the receiver
   sendChannel.send(JSON.stringify({
     fileName: file.name,
     fileSize: file.size
   }));
-  readNextChunk();
 });
 
 // receive file
