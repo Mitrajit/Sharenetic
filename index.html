@@ -15,34 +15,44 @@
 </head>
 
 <body>
-    <div class="container w-50">
-        <div class="input-group mb-3 my-4">
-            <input type="text" class="form-control" placeholder="Recipient's username" aria-label="Recipient's ID"
-                aria-describedby="button-addon2" id="Recipient">
-            <button class="btn btn-primary mx-2" type="button" id="Connect">Connect</button>
-            <button class="btn btn-outline-secondary" type="button" id="copyid"
-                onclick="this.blur(); navigator.clipboard.writeText(localStorage.id); coppied(this)">
-                <i class="bi bi-clipboard"></i></button>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="input-group my-4">
+                    <input type="text" class="form-control" placeholder="Recipient's username"
+                        aria-label="Recipient's ID" aria-describedby="button-addon2" id="Recipient">
+                    <button class="btn btn-primary mx-2" type="button" id="Connect">Connect</button>
+                    <button class="btn btn-outline-secondary" type="button" id="copyid"
+                        onclick="this.blur(); navigator.clipboard.writeText(localStorage.id); coppied(this)">
+                        <i class="bi bi-clipboard"></i></button>
+                </div>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label for="formFileMultiple" class="form-label">Multiple files input example</label>
-            <input class="form-control" type="file" id="file" multiple><!--webkitdirectory mozdirectory>-->
-            <button type="button" class="btn btn-primary my-lg-3" id="Send">Send</button>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <label for="formFileMultiple" class="form-label">Select the file to send</label>
+                <div class="input-group">
+                    <input class="form-control" type="file" id="file">
+                    <!--webkitdirectory mozdirectory>-->
+                    <button type="button" class="btn btn-primary ms-2" id="Send">Send</button>
+                </div>
+            </div>
         </div>
-        <div>
-            <!-- <div class="progress-bar" role="progressbar" style="width: 25%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" id="sendProgress"></div> -->
-            <div class="label">Send progress: <span id="upload-spd"></span></div>
-            <progress id="sendProgress" max="100" value="0" class="w-100"></progress>
-            <div class="label">Receive progress: <span id="download-spd"></span></div>
-            <progress id="receiveProgress" max="100" value="0" class="w-100"></progress>
+        <div class="row justify-content-center mt-4">
+            <div class="col-lg-8">
+                <!-- <div class="progress-bar" role="progressbar" style="width: 25%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" id="sendProgress"></div> -->
+                <div class="label">Send progress: <span id="upload-spd"></span></div>
+                <progress id="sendProgress" max="100" value="0" class="w-100"></progress>
+                <div class="label">Receive progress: <span id="download-spd"></span></div>
+                <progress id="receiveProgress" max="100" value="0" class="w-100"></progress>
+            </div>
         </div>
     </div>
     <!-- Full screen modal -->
-    <div class="modal fade" id="popup" aria-hidden="true"
-        aria-labelledby="exampleModalToggleLabel" tabindex="-1">
-        <div class="modal-dialog modal-fullscreen-sm-down">
-            <div class="modal-content">
+    <div class="modal fade" id="popup" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+        <div class="modal-dialog">
+            <!-- <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Receive request</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -53,9 +63,9 @@
                 <div class="modal-footer">
                     <button class="btn btn-primary" data-bs-dismiss="modal">Confirm</button>
                     <button class="btn btn-danger" data-bs-dismiss="modal">Deny</button>
-                </div>
-            </div>
+                </div> -->
         </div>
+    </div>
     </div>
     <!-- Optional JavaScript; choose one of the two! -->
 
