@@ -212,11 +212,18 @@ function startDownload(data) {
   downloadInProgress = true;
   console.log('incoming file <b>' + incomingFileInfo.fileName + '</b> of ' + incomingFileInfo.fileSize + ' bytes');
   receiveprogressbar.max = incomingFileInfo.fileSize;
+  window.fileStream = streamSaver.createWriteStream(`${incomingFileInfo.fileName}`, {
+    size: incomingFileInfo.fileSize,
+    // writableStrategy: new ByteLengthQueuingStrategy({ highWaterMark: 1024000 }),
+    // readableStrategy: new ByteLengthQueuingStrategy({ highWaterMark: 1024000 })
+  });
+  window.writer = fileStream.getWriter();
 }
 
-function progressDownload(data) {
+async function progressDownload(data) {
+  await writer.write(new Uint8Array(data));
   bytesReceived += data.byteLength;
-  incomingFileData.push(data);
+  // incomingFileData.push(data);
   receiveprogressbar.value = bytesReceived;
   if (bytesReceived === incomingFileInfo.fileSize) {
     endDownload();
@@ -225,21 +232,9 @@ function progressDownload(data) {
 
 function endDownload() {
   downloadInProgress = false;
-  var blob = new window.Blob(incomingFileData);
-  var anchor = document.createElement('a');
-  anchor.href = URL.createObjectURL(blob);
-  console.log(anchor.href);
-  anchor.download = incomingFileInfo.fileName;
-  anchor.textContent = 'Click to download';
   receiveprogressbar.value = 0;
   clearInterval(statsUpdateInterval);
-  if (anchor.click) {
-    anchor.click();
-  } else {
-    let evt = document.createEvent('MouseEvents');
-    evt.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-    anchor.dispatchEvent(evt);
-  }
+  writer.close();
 }
 
 // display bitrate statistics.
