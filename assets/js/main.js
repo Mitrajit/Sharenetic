@@ -23,7 +23,7 @@ function changeModal(data) {
         ${data.body}</div>`;
     if (data.confirm)
         innerHTML += `<div class="modal-footer"><button class="btn btn-primary" data-bs-dismiss="modal" onclick="sendChannel.send(JSON.stringify({confirmed:true})); removeBackdrops()">Confirm</button>
-        <button class="btn btn-danger" data-bs-dismiss="modal" onclick="sendChannel.send(JSON.stringify({confirmed:false})); removeBackdrops();">Deny</button>
+        <button class="btn btn-danger" data-bs-dismiss="modal" onclick="sendChannel.send(JSON.stringify({confirmed:false})); downloadInProgress=false; removeBackdrops();">Deny</button>
     </div>`;
     modal.firstElementChild.innerHTML = innerHTML+`</div>`;
     if(data.confirm)
