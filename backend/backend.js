@@ -7,26 +7,27 @@ const server = require('express')()
     .listen(PORT, () => console.log(`Listening on ${PORT}`));
 
 const { Server } = require('ws');
-const uuid = require('uuid');
+const { customAlphabet } = require('nanoid');
+const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const nanoid = customAlphabet(alphabet, 6);
 // const Server = require('ws').Server
 let CLIENT = {};
 const wss = new Server({ server });
-wss.on('connection', (ws,req) => {
+wss.on('connection', (ws, req) => {
     // let abc=0;
     // CLIENT[abc]=ws;
-    if(req.url.indexOf("id=")!=-1 && CLIENT[ws.id=req.url.slice(req.url.indexOf("id=")+3)]==undefined){
-        CLIENT[ws.id]=ws;
+    if (req.url.indexOf("id=") != -1 && CLIENT[ws.id = req.url.slice(req.url.indexOf("id=") + 3)] == undefined) {
+        CLIENT[ws.id] = ws;
     }
-    else
-    {
-        ws.id = uuid.v4();
-        CLIENT[ws.id]=ws;
-        ws.send(JSON.stringify({id:ws.id}));
+    else {
+        ws.id = nanoid();
+        CLIENT[ws.id] = ws;
+        ws.send(JSON.stringify({ id: ws.id }));
     }
-    console.log(ws.id+" Connected");
-    ws.on('message',(mes)=>{
-        console.log(CLIENT[JSON.parse(mes).id]);
-        CLIENT[JSON.parse(mes).id].send(mes);
+    console.log(ws.id + " Connected");
+    ws.on('message', (mes) => {
+        let id = JSON.parse(mes).id;
+        CLIENT[id] && CLIENT[JSON.parse(mes).id].send(mes);
     });
     ws.on('close', () => {
         delete CLIENT[ws.id];
