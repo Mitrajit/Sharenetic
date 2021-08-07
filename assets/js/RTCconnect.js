@@ -28,11 +28,12 @@ function connect() {
       else if (mes.offer) {
         console.log("OFFER");
         console.log(mes.offer);
+        createConnection();
         const remoteDesc = new RTCSessionDescription(JSON.parse(mes.offer));
         peerConnection.setRemoteDescription(remoteDesc);
         console.log("remote desc set");
         const answer = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
+        peerConnection.setLocalDescription(answer);
         Recipient.value = mes.from;
         ws.send(JSON.stringify({ from: localStorage.id, id: mes.from, 'answer': JSON.stringify(answer) }));
       }
@@ -47,15 +48,35 @@ function connect() {
   }
 }
 
-let connectButton = document.getElementById('Connect');
-let Recipient = document.getElementById('Recipient');
+var connectButton = document.getElementById('Connect');
+var Recipient = document.getElementById('Recipient');
 connectButton.addEventListener('click', () => {
-  console.log("sending");
-  makeCall();
+  toggleconnection();
 });
+var nowConnect = true;
+function toggleconnection() {
+  if (nowConnect) {
+    createConnection();
+    makeCall();
+  }
+  else
+    disconnectPeers();
+}
 
+// Creating connection
 const configuration = { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] }
-const peerConnection = new RTCPeerConnection(configuration);
+var peerConnection = null;
+function createConnection() {
+  peerConnection = new RTCPeerConnection(configuration);
+  peerConnection.onicecandidate = onicecandidate;
+  peerConnection.onconnectionstatechange = onconnectionstatechange;
+  peerConnection.ondatachannel = receiveChannelCallback;
+
+  sendChannel = peerConnection.createDataChannel('sendDataChannel');
+  sendChannel.onopen = () => { console.log("Send channel opened"); };
+  sendChannel.onclose = () => { console.log("Send channel closed"); };
+}
+//Offering for connection
 async function makeCall() {
   const offer = await peerConnection.createOffer();
   console.log("setting local rescription");
@@ -64,25 +85,51 @@ async function makeCall() {
   ws.send(JSON.stringify({ from: localStorage.id, id: Recipient.value, 'offer': JSON.stringify(offer) }));
 }
 
-peerConnection.onicecandidate = (event) => {
+function onicecandidate(event) {
   console.log("YES ATLEAST GOING");
   if (event.candidate) {
     ws.send(JSON.stringify({ from: localStorage.id, id: Recipient.value, 'icecandidate': JSON.stringify(event.candidate) }));
   }
 }
 
-peerConnection.addEventListener('connectionstatechange', event => {
-  if (peerConnection.connectionState === 'connected') {
-    changeModal({ title: "Peer Connected", body: `Connected to ${Recipient.value}` });
+function onconnectionstatechange(event) {
+  switch (peerConnection.connectionState) {
+    case 'connected':
+      changeModal({ title: "Peer Connected", body: `Connected to ${Recipient.value}` });
+      nowConnect = false;
+      connectButton.classList.replace("btn-primary", "btn-danger");
+      connectButton.innerText = "Disconnect";
+      Recipient.disabled = true;
+      break;
+    case "disconnected":
+      console.log("disconnected");
+    case 'closed':
+      nowConnect = true;
+      connectButton.classList.replace("btn-danger", "btn-primary");
+      connectButton.innerText = "Connect";
+      Recipient.disabled = false;
+      break;
+    case "failed":
+      console.log("failed");
+    default:
+      console.log(peerConnection.connectionState);
   }
-});
+}
+
+// Disconnecting peers
+function disconnectPeers() {
+  sendChannel.close();
+  peerConnection.close();
+  nowConnect = true;
+  connectButton.classList.replace("btn-danger", "btn-primary");
+  connectButton.innerText = "Connect";
+  Recipient.disabled = false;
+  receiveChannel && receiveChannel.close() && (receiveChannel = null);
+}
 
 // Creating send and receive data channel
-let sendChannel = peerConnection.createDataChannel('sendDataChannel');
-sendChannel.onopen = () => { console.log("Send channel opened"); };
-sendChannel.onclose = () => { console.log("Send channel closed"); };
+let sendChannel = null;
 
-peerConnection.ondatachannel = receiveChannelCallback;
 let receiveChannel;
 function receiveChannelCallback(event) {
   console.log('Receive Channel Callback');
@@ -245,12 +292,18 @@ const stats = () => setInterval(displayStats, 500);
 var statsUpdateInterval;
 async function displayStats() {
   if (peerConnection && peerConnection.iceConnectionState === 'connected') {
-    const stats = await peerConnection.getStats();
+    const statis = await peerConnection.getStats();
     let activeCandidatePair;
-    stats.forEach(report => {
-      if (report.type === 'transport') {
-        activeCandidatePair = stats.get(report.selectedCandidatePairId);
+    statis.forEach(report => {
+
+      if (window.webkitRTCPeerConnection) {
+        if (report.type === 'transport')
+          activeCandidatePair = report
       }
+      else
+        if (report.type === 'candidate-pair') {
+          activeCandidatePair = report;
+        }
     });
     if (activeCandidatePair) {
       if (timestampPrev === activeCandidatePair.timestamp) {
