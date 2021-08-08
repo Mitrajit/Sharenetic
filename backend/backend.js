@@ -1,10 +1,23 @@
 require("dotenv").config();
+const cors = require("cors");
 const PORT = process.env.PORT;
-const INDEX = '/index.html';
 
-const server = require('express')()
-    .use((req, res) => res.sendFile(INDEX, { root: __dirname }))
-    .listen(PORT, () => console.log(`Listening on ${PORT}`));
+const app = require('express')();
+const server = app.listen(PORT, () => console.log(`Listening on ${PORT}`));
+
+
+let whitelist = process.env.ORIGIN.split(' ');
+let corsOptions = {
+    origin: function (origin, callback) {
+        if (!origin || whitelist.indexOf(new URL(origin).hostname) !== -1) {
+            callback(null, true)
+        } else {
+            callback(new Error('Not allowed by CORS'))
+        }
+    },
+    optionsSuccessStatus: 200 // For legacy browser support
+}
+app.use(cors(corsOptions));
 
 const { Server } = require('ws');
 const { customAlphabet } = require('nanoid');
