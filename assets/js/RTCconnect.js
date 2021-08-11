@@ -1,3 +1,4 @@
+"use strict";
 // console.log("Hello world");
 // const peerConnection = new RTCPeerConnection();
 
@@ -74,7 +75,12 @@ function createConnection() {
 
   sendChannel = peerConnection.createDataChannel('sendDataChannel');
   sendChannel.onopen = () => { console.log("Send channel opened"); };
-  sendChannel.onclose = () => { console.log("Send channel closed"); };
+  sendChannel.onclose = () => {
+    console.log("Send channel closed");
+    sendInProgress = false;
+    sendprogressbar.value = 0;
+  };
+  sendChannel.bufferedAmountLowThreshold = 5 * 1024 * 1024; // If buffer <=5MB then start sending again
 }
 //Offering for connection
 async function makeCall() {
@@ -104,10 +110,8 @@ function onconnectionstatechange(event) {
     case "disconnected":
       console.log("disconnected");
     case 'closed':
-      nowConnect = true;
-      connectButton.classList.replace("btn-danger", "btn-primary");
-      connectButton.innerText = "Connect";
-      Recipient.disabled = false;
+      console.log("Peer connection Closed");
+      disconnectPeers();
       break;
     case "failed":
       console.log("failed");
@@ -119,12 +123,13 @@ function onconnectionstatechange(event) {
 // Disconnecting peers
 function disconnectPeers() {
   sendChannel.close();
+  receiveChannel && receiveChannel.close() && (receiveChannel = null);
   peerConnection.close();
   nowConnect = true;
   connectButton.classList.replace("btn-danger", "btn-primary");
   connectButton.innerText = "Connect";
   Recipient.disabled = false;
-  receiveChannel && receiveChannel.close() && (receiveChannel = null);
+  sendButton.disabled = false;
 }
 
 // Creating send and receive data channel
@@ -137,7 +142,13 @@ function receiveChannelCallback(event) {
   receiveChannel.binaryType = 'arraybuffer';
   receiveChannel.onmessage = onReceiveMessageCallback;
   receiveChannel.onopen = onReceiveChannelStateChange;
-  receiveChannel.onclose = onReceiveChannelStateChange;
+  receiveChannel.onclose = onReceiveChannelClose;
+}
+function onReceiveChannelClose() {
+  console.log("Receive Channel closed");
+  receiveprogressbar.value = 0;
+  downloadInProgress = false;
+  writer.abort();
 }
 function onReceiveChannelStateChange() {
   const readyState = receiveChannel.readyState;
@@ -154,6 +165,7 @@ function onReceiveMessageCallback(event) {
       else {
         clearInterval(statsUpdateInterval);
         sendButton.disabled = false;
+        sendInProgress = false;
         changeModal({ title: "File Rejected", body: "File to be sent was failed" });
       }
       return;
@@ -162,7 +174,7 @@ function onReceiveMessageCallback(event) {
       changeModal({ title: "Receive request", body: `Do you want to download ${data.fileName}`, confirm: true });
 
   }
-  if (downloadInProgress === false) {
+  if (!downloadInProgress) {
     startDownload(event.data);
   } else {
     progressDownload(event.data);
@@ -177,7 +189,7 @@ var currentChunk;
 var fileInput = document.querySelector('input#file');
 var fileReader = new FileReader();
 var webRTCMessageQueue = [];
-let webRTCPaused = false;
+let sendInProgress;
 
 function readNextChunk() {
   var start = BYTES_PER_CHUNK * currentChunk;
@@ -186,12 +198,10 @@ function readNextChunk() {
 }
 
 function sendMessageQueued() {
-  webRTCPaused = false;
   let message = webRTCMessageQueue.shift();
 
   while (message) {
     if (sendChannel.bufferedAmount && sendChannel.bufferedAmount > BUFFER_FULL_THRESHOLD) {
-      webRTCPaused = true;
       webRTCMessageQueue.unshift(message);
 
       const listener = () => {
@@ -210,6 +220,7 @@ function sendMessageQueued() {
         sendprogressbar.value = 0;
         clearInterval(statsUpdateInterval);
         sendButton.disabled = false;
+        sendInProgress = false;
       }
       message = webRTCMessageQueue.shift();
     } catch (error) {
@@ -235,6 +246,7 @@ sendButton.addEventListener('click', function () {
   timestampPrev = new Date().getTime();
   statsUpdateInterval = stats();
   this.disabled = true;
+  sendInProgress = true;
   // send some metadata about our file
   // to the receiver
   sendChannel.send(JSON.stringify({
@@ -250,6 +262,7 @@ var bytesReceived;
 var downloadInProgress = false;
 let receiveprogressbar = document.querySelector("progress#receiveProgress");
 let sendprogressbar = document.querySelector("progress#sendProgress");
+streamSaver.mitm = "assets/js/mitm.html";
 function startDownload(data) {
   incomingFileInfo = JSON.parse(data.toString());
   incomingFileData = [];
@@ -268,12 +281,17 @@ function startDownload(data) {
 }
 
 async function progressDownload(data) {
-  await writer.write(new Uint8Array(data));
-  bytesReceived += data.byteLength;
-  // incomingFileData.push(data);
-  receiveprogressbar.value = bytesReceived;
-  if (bytesReceived === incomingFileInfo.fileSize) {
-    endDownload();
+  try {
+    await writer.write(new Uint8Array(data));
+    bytesReceived += data.byteLength;
+    // incomingFileData.push(data);
+    receiveprogressbar.value = bytesReceived;
+    if (bytesReceived === incomingFileInfo.fileSize) {
+      endDownload();
+    }
+  }
+  catch(error){
+    console.log("Writer aborted");
   }
 }
 
@@ -282,6 +300,18 @@ function endDownload() {
   receiveprogressbar.value = 0;
   clearInterval(statsUpdateInterval);
   writer.close();
+}
+
+window.onunload = () => {
+  writableStream.abort();
+  writer.abort();
+  disconnectPeers();
+}
+
+window.onbeforeunload = evt => {
+  if (downloadInProgress || sendInProgress) {
+    evt.returnValue = `Are you sure you want to leave?`;
+  }
 }
 
 // display bitrate statistics.
