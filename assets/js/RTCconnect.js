@@ -148,7 +148,7 @@ function onReceiveChannelClose() {
   console.log("Receive Channel closed");
   receiveprogressbar.value = 0;
   downloadInProgress = false;
-  writer.abort();
+  window.writer && writer.abort();
 }
 function onReceiveChannelStateChange() {
   const readyState = receiveChannel.readyState;
