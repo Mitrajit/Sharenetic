@@ -1,9 +1,19 @@
 "use strict";
 require("dotenv").config();
+const express = require('express');
+const app = express();
+const errorHandler = require("errorhandler");
 const cors = require("cors");
 const PORT = process.env.PORT;
+const Pusher = require('pusher');
+var pusher = new Pusher({
+    appId: process.env.PUSHER_APP_ID,
+    key: process.env.PUSHER_APP_KEY,
+    secret: process.env.PUSHER_APP_SECRET,
+    cluster: process.env.PUSHER_APP_CLUSTER,
+    useTlS: true
+});
 
-const app = require('express')();
 const server = app.listen(PORT, () => console.log(`Listening on ${PORT}`));
 
 let whitelist = process.env.ORIGIN.split(' ');
@@ -18,6 +28,26 @@ let corsOptions = {
     optionsSuccessStatus: 200 // For legacy browser support
 }
 app.use(cors(corsOptions));
+
+app.use(express.urlencoded({
+    extended: true
+}));
+app.use(express.json());
+
+app.use(errorHandler({
+    dumpExceptions: true,
+    showStack: true
+}));
+
+app.post("/connect", function (req, res) {
+    var socketId = req.body.socketId;
+    var channel = req.body.channel;
+    var message = req.body.message;
+
+    pusher.trigger(channel, "message", {message: message}).catch((e)=>console.log(e));
+
+    res.send(200);
+});
 
 const { Server } = require('ws');
 const { customAlphabet } = require('nanoid');
@@ -53,8 +83,3 @@ wss.on('connection', (ws, req) => {
 });
 wss.on("error", (error) => { console.log("Websocket server: " + error.code) });
 
-// setInterval(() => {
-//     wss.clients.forEach((client) => {
-//         client.send(new Date().toTimeString());
-//     });
-// }, 1006);
