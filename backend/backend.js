@@ -4,6 +4,7 @@ const express = require('express');
 const app = express();
 const errorHandler = require("errorhandler");
 const cors = require("cors");
+const helmet = require("helmet");
 const PORT = process.env.PORT;
 const Pusher = require('pusher');
 var pusher = new Pusher({
@@ -28,6 +29,7 @@ let corsOptions = {
     optionsSuccessStatus: 200 // For legacy browser support
 }
 app.use(cors(corsOptions));
+app.use(helmet());
 
 app.use(express.urlencoded({
     extended: true
@@ -39,20 +41,26 @@ app.use(errorHandler({
     showStack: true
 }));
 
+app.get("/startup", function (req, res) {
+    let id;
+    if (req.url.indexOf("id=") == -1 || CLIENT[id=req.url.slice(req.url.indexOf("id=") + 3)] != undefined)
+        id = nanoidcustom();
+    CLIENT[id] = nanoid();
+    res.send({ id, channel: CLIENT[id] });
+});
 app.post("/connect", function (req, res) {
-    var socketId = req.body.socketId;
-    var channel = req.body.channel;
-    var message = req.body.message;
-
-    pusher.trigger(channel, "message", {message: message}).catch((e)=>console.log(e));
-
-    res.send(200);
+    let socketId = req.body.socketId;
+    let id = req.body.id;
+    let message = req.body.message;
+    CLIENT[id] && pusher.trigger(CLIENT[id], "message", message, socketId).catch((e) => console.log(e));
+    res.sendStatus(200);
 });
 
 const { Server } = require('ws');
-const { customAlphabet } = require('nanoid');
+const nid = require("nanoid");
+const nanoid = nid.nanoid;
 const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const nanoid = customAlphabet(alphabet, 6);
+const nanoidcustom = nid.customAlphabet(alphabet,6);
 // const Server = require('ws').Server
 let CLIENT = {};
 const wss = new Server({
@@ -66,7 +74,7 @@ wss.on('connection', (ws, req) => {
         CLIENT[ws.id] = ws;
     }
     else {
-        ws.id = nanoid();
+        ws.id = nanoidcustom();
         CLIENT[ws.id] = ws;
         ws.send(JSON.stringify({ id: ws.id }));
     }
