@@ -41,26 +41,35 @@ app.use(errorHandler({
     showStack: true
 }));
 
-app.get("/startup", function (req, res) {
-    let id;
-    if (req.url.indexOf("id=") == -1 || CLIENT[id=req.url.slice(req.url.indexOf("id=") + 3)] != undefined)
+app.get("/connect", function (req, res) {
+    let id=req.query.id;
+    if (!id || CLIENT[id] != undefined)
         id = nanoidcustom();
     CLIENT[id] = nanoid();
+    console.log(id + " " + CLIENT[id]);
     res.send({ id, channel: CLIENT[id] });
 });
 app.post("/connect", function (req, res) {
-    let socketId = req.body.socketId;
     let id = req.body.id;
     let message = req.body.message;
-    CLIENT[id] && pusher.trigger(CLIENT[id], "message", message, socketId).catch((e) => console.log(e));
+    CLIENT[id] && pusher.trigger(CLIENT[id], "message", message).catch((e) => console.log(e));
     res.sendStatus(200);
 });
-
+app.get("/disconnect", function (req, res) {
+    let id = req.query.id;
+    if (id && CLIENT[id] != undefined) {
+        console.log("Disconnected: "+id);
+        delete CLIENT[id];
+        res.status(200).send(`Deleted ${id}`);
+    }
+    else 
+        res.sendStatus(201);
+});
 const { Server } = require('ws');
 const nid = require("nanoid");
 const nanoid = nid.nanoid;
 const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const nanoidcustom = nid.customAlphabet(alphabet,6);
+const nanoidcustom = nid.customAlphabet(alphabet, 6);
 // const Server = require('ws').Server
 let CLIENT = {};
 const wss = new Server({
