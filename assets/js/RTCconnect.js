@@ -1,49 +1,36 @@
 "use strict";
-// console.log("Hello world");
-// const peerConnection = new RTCPeerConnection();
-
-// sendChannel = localConnection.createDataChannel('sendDataChannel');
-let HOST = "http://127.0.0.1:3000".replace(/^http/, 'ws');
-if (localStorage.id)
-  HOST += `?id=${localStorage.id}`
-let ws, el;
-connect();
-function connect() {
-  ws = new WebSocket(HOST);
-  ws.onerror = () => { setTimeout(connect, 1000); }
-  ws.onmessage = async function (mes) {
-    mes = JSON.parse(mes.data);
-    if (!localStorage.id)
-      localStorage.id = mes.id;
-    else if (mes.id != localStorage.id)
-      console.log("false request");
-    else {
-      console.log(mes);
-      if (mes.answer) {
-        console.log("ANSWER");
-        console.log(mes.answer);
-        const remoteDesc = new RTCSessionDescription(JSON.parse(mes.answer));
-        await peerConnection.setRemoteDescription(remoteDesc);
-        console.log("remote desc set");
-      }
-      else if (mes.offer) {
-        console.log("OFFER");
-        console.log(mes.offer);
-        createConnection();
-        const remoteDesc = new RTCSessionDescription(JSON.parse(mes.offer));
-        peerConnection.setRemoteDescription(remoteDesc);
-        console.log("remote desc set");
-        const answer = await peerConnection.createAnswer();
-        peerConnection.setLocalDescription(answer);
-        Recipient.value = mes.from;
-        ws.send(JSON.stringify({ from: localStorage.id, id: mes.from, 'answer': JSON.stringify(answer) }));
-      }
-      else if (mes.icecandidate) {
-        try {
-          await peerConnection.addIceCandidate(JSON.parse(mes.icecandidate));
-        } catch (e) {
-          console.error('Error adding received ice candidate', e);
-        }
+async function signallingOnMessage(mes) {
+  console.log(mes);
+  if (!localStorage.id)
+    localStorage.id = mes.id;
+  else if (mes.id != localStorage.id)
+    console.log("false request");
+  else {
+    console.log(mes);
+    if (mes.answer) {
+      console.log("ANSWER");
+      console.log(mes.answer);
+      const remoteDesc = new RTCSessionDescription(JSON.parse(mes.answer));
+      await peerConnection.setRemoteDescription(remoteDesc);
+      console.log("remote desc set");
+    }
+    else if (mes.offer) {
+      console.log("OFFER");
+      console.log(mes.offer);
+      createConnection();
+      const remoteDesc = new RTCSessionDescription(JSON.parse(mes.offer));
+      peerConnection.setRemoteDescription(remoteDesc);
+      console.log("remote desc set");
+      const answer = await peerConnection.createAnswer();
+      peerConnection.setLocalDescription(answer);
+      Recipient.value = mes.from;
+      signal({ from: localStorage.id, id: mes.from, 'answer': JSON.stringify(answer) });
+    }
+    else if (mes.icecandidate) {
+      try {
+        await peerConnection.addIceCandidate(JSON.parse(mes.icecandidate));
+      } catch (e) {
+        console.error('Error adding received ice candidate', e);
       }
     }
   }
@@ -88,13 +75,13 @@ async function makeCall() {
   console.log("setting local rescription");
   console.log(offer);
   await peerConnection.setLocalDescription(offer);
-  ws.send(JSON.stringify({ from: localStorage.id, id: Recipient.value, 'offer': JSON.stringify(offer) }));
+  signal({ from: localStorage.id, id: Recipient.value, 'offer': JSON.stringify(offer) });
 }
 
 function onicecandidate(event) {
   console.log("YES ATLEAST GOING");
   if (event.candidate) {
-    ws.send(JSON.stringify({ from: localStorage.id, id: Recipient.value, 'icecandidate': JSON.stringify(event.candidate) }));
+    signal({ from: localStorage.id, id: Recipient.value, 'icecandidate': JSON.stringify(event.candidate) });
   }
 }
 
@@ -290,7 +277,7 @@ async function progressDownload(data) {
       endDownload();
     }
   }
-  catch(error){
+  catch (error) {
     console.log("Writer aborted");
   }
 }
@@ -302,17 +289,16 @@ function endDownload() {
   writer.close();
 }
 
-window.onunload = () => {
+window.addEventListener('unload', () => {
   writableStream.abort();
   writer.abort();
   disconnectPeers();
-}
+});
 
-window.onbeforeunload = evt => {
-  if (downloadInProgress || sendInProgress) {
+window.addEventListener('beforeunload', evt => {
+  if (downloadInProgress || sendInProgress)
     evt.returnValue = `Are you sure you want to leave?`;
-  }
-}
+});
 
 // display bitrate statistics.
 var timestampPrev, RTCbytesRecPrev = 0, RTCbytesSentPrev;
