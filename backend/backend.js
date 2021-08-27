@@ -5,6 +5,7 @@ const app = express();
 const errorHandler = require("errorhandler");
 const cors = require("cors");
 const helmet = require("helmet");
+const crypto = require("crypto");
 const PORT = process.env.PORT;
 const Pusher = require('pusher');
 var pusher = new Pusher({
@@ -42,10 +43,10 @@ app.use(errorHandler({
 }));
 
 app.get("/connect", function (req, res) {
-    let id=req.query.id;
+    let id = req.query.id;
     if (!id || CLIENT[id] != undefined)
         id = nanoidcustom();
-    CLIENT[id] = nanoid();
+    CLIENT[id] = id + nanoid();
     console.log(id + " " + CLIENT[id]);
     res.send({ id, channel: CLIENT[id] });
 });
@@ -55,15 +56,29 @@ app.post("/connect", function (req, res) {
     CLIENT[id] && pusher.trigger(CLIENT[id], "message", message).catch((e) => console.log(e));
     res.sendStatus(200);
 });
+// Remove in production start
 app.get("/disconnect", function (req, res) {
     let id = req.query.id;
     if (id && CLIENT[id] != undefined) {
-        console.log("Disconnected: "+id);
+        console.log("Disconnected: " + id);
         delete CLIENT[id];
         res.status(200).send(`Deleted ${id}`);
     }
-    else 
+    else
         res.sendStatus(201);
+});
+// Remove in production end
+app.post("/disconnect", function (req, res) {// tested
+    if (req.get('x-pusher-key') == process.env.PUSHER_VERIFICATION_KEY && crypto.createHmac("sha256", process.env.PUSHER_VERIFICATION_SECRET).update(JSON.stringify(req.body)).digest("hex") == req.get('X-Pusher-Signature')) {
+        req.body.events.forEach(event => {
+            if (event.name == 'channel_vacated') {
+                let id = event.channel.slice(0, 6);
+                delete CLIENT[id];
+                console.log("Disconnected: " + id);
+            }
+        });
+    }
+    res.sendStatus(200); // Even send 200 for malacious request
 });
 const { Server } = require('ws');
 const nid = require("nanoid");
