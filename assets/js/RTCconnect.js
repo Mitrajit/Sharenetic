@@ -4,7 +4,7 @@ async function signallingOnMessage(mes) {
   if (!localStorage.id)
     localStorage.id = mes.id;
   else if (mes.id != localStorage.id)
-    console.log("false request");
+    console.error("False request. Messaged reached wrong destination.");
   else {
     console.log(mes);
     if (mes.answer) {
@@ -17,21 +17,17 @@ async function signallingOnMessage(mes) {
     else if (mes.offer) {
       console.log("OFFER");
       console.log(mes.offer);
-      createConnection();
-      const remoteDesc = new RTCSessionDescription(JSON.parse(mes.offer));
-      peerConnection.setRemoteDescription(remoteDesc);
-      console.log("remote desc set");
-      const answer = await peerConnection.createAnswer();
-      peerConnection.setLocalDescription(answer);
       Recipient.value = mes.from;
-      signal({ from: localStorage.id, id: mes.from, 'answer': JSON.stringify(answer) });
+      await makeanswer(JSON.parse(mes.offer), mes.from)
     }
-    else if (mes.icecandidate) {
-      try {
-        await peerConnection.addIceCandidate(JSON.parse(mes.icecandidate));
-      } catch (e) {
-        console.error('Error adding received ice candidate', e);
-      }
+    if (mes.icecandidate) {
+      mes.icecandidate.forEach(async function (element) {
+        try {
+          await peerConnection.addIceCandidate(JSON.parse(element));
+        } catch (e) {
+          console.error('Error adding received ice candidate', e);
+        }
+      });
     }
   }
 }
@@ -54,9 +50,11 @@ function toggleconnection() {
 // Creating connection
 const configuration = { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] }
 var peerConnection = null;
+let theSignal = { icecandidate: [] };
 function createConnection() {
   peerConnection = new RTCPeerConnection(configuration);
   peerConnection.onicecandidate = onicecandidate;
+  peerConnection.onicegatheringstatechange = onicegatheringstatechange;
   peerConnection.onconnectionstatechange = onconnectionstatechange;
   peerConnection.ondatachannel = receiveChannelCallback;
 
@@ -72,16 +70,43 @@ function createConnection() {
 //Offering for connection
 async function makeCall() {
   const offer = await peerConnection.createOffer();
-  console.log("setting local rescription");
+  console.log("setting local description");
   console.log(offer);
   await peerConnection.setLocalDescription(offer);
-  signal({ from: localStorage.id, id: Recipient.value, 'offer': JSON.stringify(offer) });
+  theSignal['from'] = localStorage.id;
+  theSignal['id'] = Recipient.value;
+  theSignal['offer'] = JSON.stringify(offer);
+}
+
+async function makeanswer(offer, from) {
+  createConnection();
+  const remoteDesc = new RTCSessionDescription(offer);
+  peerConnection.setRemoteDescription(remoteDesc);
+  console.log("remote desc set");
+  const answer = await peerConnection.createAnswer();
+  peerConnection.setLocalDescription(answer);
+  theSignal['from'] = localStorage.id;
+  theSignal['id'] = from;
+  theSignal['answer'] = JSON.stringify(answer);
 }
 
 function onicecandidate(event) {
   console.log("YES ATLEAST GOING");
-  if (event.candidate) {
-    signal({ from: localStorage.id, id: Recipient.value, 'icecandidate': JSON.stringify(event.candidate) });
+  if (event.candidate)
+    theSignal.icecandidate.push(JSON.stringify(event.candidate));
+
+}
+
+function onicegatheringstatechange(event) {
+  if (peerConnection.iceGatheringState == "complete") {
+    signal(theSignal).then(response => {
+      if (response.status == 200)
+        console.log("Signal sent");
+      else
+        throw Error('Signalling failed');
+    }).catch(error => { 
+      console.log(error.message); });
+    theSignal = { icecandidate: [] };
   }
 }
 

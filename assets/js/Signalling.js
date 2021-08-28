@@ -30,25 +30,17 @@ function subscribe() {
     window.channel.bind('pusher:subscription_error', () => { setTimeout(subscribe, 1000); });
     window.channel.bind('message', (mes) => signallingOnMessage(mes));
 }
-function signal(mes) {
-    fetch(base + "/connect", {
+async function signal(mes) {
+    return await fetch(base + "/connect", {
         "method": "POST",
         "headers": {
             "cache-control": "no-cache",
             "Content-Type": "application/json"
         },
         "body": JSON.stringify({ "id": mes.id, "message": mes })
-    })
-        .then(function (response) {
-            console.log(response.status);
-            return response.text();
-        }).then(function (data) {
-            console.log(data);
-        })
-        .catch(function (error) {
-            console.log(error.message);
-        });
+    });
 }
+// Remove in production start
 function signallingDisconnect() {
     fetch(base + "/disconnect?id=" + localStorage.id, {
         method: "GET",
@@ -64,3 +56,4 @@ function signallingDisconnect() {
         });
 }
 window.addEventListener('beforeunload', signallingDisconnect);
+// Remove in production end
