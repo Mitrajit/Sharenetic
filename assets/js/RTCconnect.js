@@ -104,8 +104,9 @@ function onicegatheringstatechange(event) {
         console.log("Signal sent");
       else
         throw Error('Signalling failed');
-    }).catch(error => { 
-      console.log(error.message); });
+    }).catch(error => {
+      console.log(error.message);
+    });
     theSignal = { icecandidate: [] };
   }
 }
@@ -172,7 +173,7 @@ function onReceiveMessageCallback(event) {
     let data = JSON.parse(event.data);
     if (data.confirmed != undefined) {
       if (data.confirmed) {
-        readNextChunk();
+        initiateSending();
       }
       else {
         clearInterval(statsUpdateInterval);
@@ -182,12 +183,17 @@ function onReceiveMessageCallback(event) {
       }
       return;
     }
-    else
-      changeModal({ title: "Receive request", body: `Do you want to download ${data.fileName}`, confirm: true });
+    else {
+      if (data.files.length == 1)
+        changeModal({ title: `Receive request from ${Recipient.value}`, body: `Do you want to download ${data.files[0].fileName}`, confirm: true });
+      else
+        changeModal({ title: `Receive request from ${Recipient.value}`, body: `Do you want to download ${data.size / 1024}KB of data?`, confirm: true });
+
+    }
 
   }
   if (!downloadInProgress) {
-    startDownload(event.data);
+    initiateDownload(event.data);
   } else {
     progressDownload(event.data);
   }
@@ -196,17 +202,30 @@ function onReceiveMessageCallback(event) {
 // Send file
 const BYTES_PER_CHUNK = 16 * 1024; // 16KB
 const BUFFER_FULL_THRESHOLD = 15 * 1024 * 1024; //15MB
-var file;
+var file, files;
 var currentChunk;
 var fileInput = document.querySelector('input#file');
-var fileReader = new FileReader();
 var webRTCMessageQueue = [];
 let sendInProgress;
 
+function initiateSending() {
+  console.log("Initiate sending");
+  for (let i = 0; i < files.length; i++) {
+    file = files[i];
+    currentChunk = 0;
+    readNextChunk();
+  }
+}
 function readNextChunk() {
-  var start = BYTES_PER_CHUNK * currentChunk;
-  var end = Math.min(file.size, start + BYTES_PER_CHUNK);
-  fileReader.readAsArrayBuffer(file.slice(start, end));
+  while (BYTES_PER_CHUNK * currentChunk < file.size) {
+    console.log(currentChunk);
+    let start = BYTES_PER_CHUNK * currentChunk;
+    let end = Math.min(file.size, start + BYTES_PER_CHUNK);
+    let fileReader = new FileReader(); // Might saturate memory needs work
+    fileReader.readAsArrayBuffer(file.slice(start, end));
+    fileReader.onload = fileReaderonload;
+    currentChunk++;
+  }
 }
 
 function sendMessageQueued() {
@@ -241,19 +260,22 @@ function sendMessageQueued() {
   }
 }
 
-fileReader.onload = function () {
-  webRTCMessageQueue.push(fileReader.result);
+function fileReaderonload() {
+  webRTCMessageQueue.push(this.result);
   sendMessageQueued();
-  currentChunk++;
-  if (BYTES_PER_CHUNK * currentChunk < file.size) {
-    readNextChunk();
-  }
 };
 
 const sendButton = document.getElementById('Send');
 sendButton.addEventListener('click', function () {
-  file = fileInput.files[0];
-  sendprogressbar.max = file.size;
+  files = fileInput.files;
+  let metadata = { size: 0, files: [] };
+  let i;
+  for (let i = 0; i < files.length; i++) {
+    metadata.size += files[i].size;
+    metadata.files.push({ fileName: files[i].name, fileSize: files[i].size });
+  }
+  console.log(metadata.size);
+  sendprogressbar.max = metadata.size;
   currentChunk = 0;
   timestampPrev = new Date().getTime();
   statsUpdateInterval = stats();
@@ -261,29 +283,31 @@ sendButton.addEventListener('click', function () {
   sendInProgress = true;
   // send some metadata about our file
   // to the receiver
-  sendChannel.send(JSON.stringify({
-    fileName: file.name,
-    fileSize: file.size
-  }));
+  sendChannel.send(JSON.stringify(metadata));
 });
 
 // receive file
 var incomingFileInfo;
-var incomingFileData;
+var incomingFiles;
 var bytesReceived;
 var downloadInProgress = false;
 let receiveprogressbar = document.querySelector("progress#receiveProgress");
 let sendprogressbar = document.querySelector("progress#sendProgress");
 streamSaver.mitm = "assets/js/mitm.html";
-function startDownload(data) {
-  incomingFileInfo = JSON.parse(data.toString());
-  incomingFileData = [];
-  bytesReceived = 0;
+function initiateDownload(data) {
+  let incomingfiles = JSON.parse(data);
+  receiveprogressbar.max = incomingfiles.size;
   timestampPrev = new Date().getTime();
   statsUpdateInterval = stats();
   downloadInProgress = true;
+  incomingFiles = incomingfiles.files;
+  startDownload();
+}
+
+function startDownload() {
+  incomingFileInfo = incomingFiles.shift();
+  bytesReceived = 0;
   console.log('incoming file <b>' + incomingFileInfo.fileName + '</b> of ' + incomingFileInfo.fileSize + ' bytes');
-  receiveprogressbar.max = incomingFileInfo.fileSize;
   window.fileStream = streamSaver.createWriteStream(`${incomingFileInfo.fileName}`, {
     size: incomingFileInfo.fileSize,
     // writableStrategy: new ByteLengthQueuingStrategy({ highWaterMark: 1024000 }),
@@ -293,11 +317,11 @@ function startDownload(data) {
 }
 
 async function progressDownload(data) {
+  console.log("Progressing");
   try {
     await writer.write(new Uint8Array(data));
     bytesReceived += data.byteLength;
-    // incomingFileData.push(data);
-    receiveprogressbar.value = bytesReceived;
+    receiveprogressbar.value += data.byteLength;
     if (bytesReceived === incomingFileInfo.fileSize) {
       endDownload();
     }
@@ -308,10 +332,14 @@ async function progressDownload(data) {
 }
 
 function endDownload() {
-  downloadInProgress = false;
-  receiveprogressbar.value = 0;
-  clearInterval(statsUpdateInterval);
   writer.close();
+  if (incomingFiles.length == 0) {
+    downloadInProgress = false;
+    receiveprogressbar.value = 0;
+    clearInterval(statsUpdateInterval);
+  }
+  else
+    startDownload();
 }
 
 window.addEventListener('unload', () => {
