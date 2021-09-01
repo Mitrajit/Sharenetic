@@ -28,9 +28,9 @@
             <span class="me-3" id="download-spd">0.00MB/s</span>
         </div>
     </div>
-    <div class="container box p-4 ">
-        <div class="input-group">
-            <input type="text" class="form-control" placeholder="Recipient's username" aria-label="Recipient's ID"
+    <div class="container box p-4">
+        <div class="input-group pb-3">
+            <input type="text" class="form-control" placeholder="Recipient's ID" aria-label="Recipient's ID"
                 aria-describedby="button-addon2" id="Recipient">
             <button class="btn btn-primary mx-2" type="button" id="Connect">Connect</button>
             <button class="btn btn-secondary" type="button" id="copyid"
@@ -41,14 +41,17 @@
 
         <label for="formFileMultiple" class="form-label">Select the file to send</label>
         <div class="input-group">
-            <input class="form-control" type="file" id="file" multiple>
-            <!--webkitdirectory mozdirectory>-->
+            <div class="file-drop-area">
+                <span class="fake-btn">Choose files</span>
+                <span class="file-msg">or drag and drop files here</span>
+                <input class="file-input" type="file" id="file" multiple>
+            </div>
             <button type="button" class="btn btn-primary ms-2" id="Send">Send</button>
         </div>
 
 
         <!-- <div class="progress-bar" role="progressbar" style="width: 25%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" id="sendProgress"></div> -->
-        <div class="label">Send progress: </div>
+        <div class="label pt-3">Send progress: </div>
         <progress id="sendProgress" max="100" value="0" class="w-100"></progress>
         <div class="label">Receive progress: </div>
         <progress id="receiveProgress" max="100" value="0" class="w-100"></progress>

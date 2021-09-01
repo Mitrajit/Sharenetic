@@ -30,3 +30,38 @@ function changeModal(data) {
     else
     bs_modal.toggle();
 }
+
+let file_Input = document.querySelector('.file-input');
+let droparea = document.querySelector('.file-drop-area');
+// highlight drag area
+file_Input.addEventListener('dragenter', function() {
+  droparea.classList.add('is-active');
+});
+file_Input.addEventListener('click', function() {
+  droparea.classList.add('is-active');
+});
+
+// back to normal state
+file_Input.addEventListener('dragleave', function() {
+  droparea.classList.remove('is-active');
+});
+file_Input.addEventListener('blur', function() {
+  droparea.classList.remove('is-active');
+});
+file_Input.addEventListener('drop', function() {
+  droparea.classList.remove('is-active');
+});
+
+// change inner text
+file_Input.addEventListener('change', function() {
+  var filesCount = this.files.length;
+  let textContainer = this.previousElementSibling;
+  if (filesCount === 1) {
+    // if single file is selected, show file name
+    var fileName = this.value.split('\\').pop();
+    textContainer.innerText = fileName;
+  } else {
+    // otherwise show number of files
+    textContainer.innerText=filesCount + ' files selected';
+  }
+});
