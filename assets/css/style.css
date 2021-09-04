@@ -42,13 +42,15 @@ span{
     background: #54545471; 
     border-radius: 23px;
     color: #FFFFFF;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
 }
 @media only screen and (min-width: 992px) {
     .container{
         width: calc(7/12*100%);
     }
 }
-.btn-primary, .btn-primary:hover, .btn-primary:disabled{
+.btn-primary, .btn-primary:hover, .btn-primary:disabled, .btn-primary:focus{
     background-color: #fd7e14;
     border-color: #fd7e14;
 }
