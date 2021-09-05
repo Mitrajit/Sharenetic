@@ -54,6 +54,13 @@ span{
     background-color: #fd7e14;
     border-color: #fd7e14;
 }
+@media screen and (max-width: 480px) {
+    button#Send{
+        margin-top: 10px;
+        margin-left: 0%!important;
+        width: 100%;
+    }
+}
 .form-control, .form-control:focus, .form-control:disabled{
     color: #FFFFFF ;
     background-color: #0a080800;
@@ -103,6 +110,9 @@ span{
 }
 .file-input:focus{
     outline: none;
+}
+.input-group{
+    justify-content: space-around;
 }
 progress{
     -webkit-appearance: none;
