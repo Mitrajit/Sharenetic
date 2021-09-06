@@ -53,7 +53,7 @@ app.get("/connect", function (req, res) {
 app.post("/connect", function (req, res) {
     let id = req.body.id;
     let message = req.body.message;
-    CLIENT[id] && pusher.trigger(CLIENT[id], "message", message).catch((e) => console.log(e));
+    CLIENT[id] && pusher.trigger(CLIENT[id], "message", message).catch(e => console.log(e));
     res.sendStatus(200);
 });
 // Remove in production start

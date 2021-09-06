@@ -1,7 +1,7 @@
 {
   "name": "p2p-messeging",
   "version": "1.0.0",
-  "description": "A messeging service that connects peer to peer using webRTC and uses websockets for signalling initial connection.",
+  "description": "A file transfer service that connects peer to peer using webRTC API and uses pusher for signalling initial connection.",
   "main": "backend.js",
   "dependencies": {
     "bufferutil": "^4.0.3",
@@ -22,5 +22,9 @@
     "debug": "nodemon --inspect ./backend/backend.js"
   },
   "author": "Mitrajit Chandra Chandra",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com:Mitrajit/Sharenetic.git"
+  }
 }
