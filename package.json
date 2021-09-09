@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "A file transfer service that connects peer to peer using webRTC API and uses pusher for signalling initial connection.",
   "main": "backend.js",
+  "engines": {
+    "node": "14.x"
+  },
   "dependencies": {
     "bufferutil": "^4.0.3",
     "cors": "^2.8.5",
