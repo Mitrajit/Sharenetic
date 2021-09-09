@@ -8,7 +8,7 @@ const helmet = require("helmet");
 const crypto = require("crypto");
 const PORT = process.env.PORT;
 const Pusher = require('pusher');
-var pusher = new Pusher({
+const pusher = new Pusher({
     appId: process.env.PUSHER_APP_ID,
     key: process.env.PUSHER_APP_KEY,
     secret: process.env.PUSHER_APP_SECRET,
@@ -53,8 +53,12 @@ app.get("/connect", function (req, res) {
 app.post("/connect", function (req, res) {
     let id = req.body.id;
     let message = req.body.message;
-    pusher.trigger(id, "message", message).catch(e => console.log(e));
-    res.sendStatus(200);
+    pusher.trigger(id, "message", message).then(()=>{
+        res.sendStatus(200)})
+        .catch(e => {
+            console.log(e);
+            res.sendStatus(500);
+        });
 });
 
 app.post("/disconnect", function (req, res) {// tested
