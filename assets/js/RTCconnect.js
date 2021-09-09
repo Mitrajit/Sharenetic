@@ -313,8 +313,6 @@ function startDownload() {
   console.log('incoming file <b>' + incomingFileInfo.fileName + '</b> of ' + incomingFileInfo.fileSize + ' bytes');
   window.fileStream = streamSaver.createWriteStream(`${incomingFileInfo.fileName}`, {
     size: incomingFileInfo.fileSize,
-    // writableStrategy: new ByteLengthQueuingStrategy({ highWaterMark: 1024000 }),
-    // readableStrategy: new ByteLengthQueuingStrategy({ highWaterMark: 1024000 })
   });
   window.writer = fileStream.getWriter();
 }

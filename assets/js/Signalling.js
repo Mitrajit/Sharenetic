@@ -1,12 +1,9 @@
 'use strict'
-Pusher.logToConsole = true;
+Pusher.logToConsole = false;
 let channelName, pusher, base = "https://sharenetic.vercel.app";
-// let channelName, pusher, base = "https://sharenetic.herokuapp.com";
-// let channelName, pusher, base = "http://127.0.0.1:3000";
 fetch(base + "/connect" + (localStorage.id ? `?id=${localStorage.id}` : ""), {
     "method": "GET",
     "headers": {
-        //   "cache-control": "no-cache",
         "Content-Type": "application/x-www-form-urlencoded"
     }
 })
@@ -42,20 +39,3 @@ async function signal(mes) {
         "body": JSON.stringify({ "id": mes.id, "message": mes })
     });
 }
-// Remove in production start
-function signallingDisconnect() {
-    fetch(base + "/disconnect?id=" + localStorage.id, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
-    })
-        .then(function (response) {
-            console.log(response.status);
-        })
-        .catch(function (error) {
-            console.log(error.message);
-        });
-}
-window.addEventListener('beforeunload', signallingDisconnect);
-// Remove in production end
