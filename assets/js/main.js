@@ -2,10 +2,13 @@ var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggl
 var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
   return new bootstrap.Tooltip(tooltipTriggerEl)
 });
-new bootstrap.Tooltip(document.querySelector('#copyid'),{
-    title: `<em>Your ID is </em><b>${localStorage.id}</b>`,
-    html: true
-});
+function updateTooltip() {
+  new bootstrap.Tooltip(document.querySelector('#copyid'),{
+      title: `<em>Your ID is </em><b>${localStorage.id}</b>`,
+      html: true
+  });
+}
+updateTooltip();
 function coppied(element) {
     element.style = "background-color: #1ECD97;";
     element.innerHTML = `<i class="bi bi-clipboard-check" style="color: white;"></i></button>`;
