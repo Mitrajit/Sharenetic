@@ -1,6 +1,8 @@
 'use strict'
 Pusher.logToConsole = true;
-let channelName, pusher, base = "http://127.0.0.1:3000";
+let channelName, pusher, base = "https://sharenetic.vercel.app";
+// let channelName, pusher, base = "https://sharenetic.herokuapp.com";
+// let channelName, pusher, base = "http://127.0.0.1:3000";
 fetch(base + "/connect" + (localStorage.id ? `?id=${localStorage.id}` : ""), {
     "method": "GET",
     "headers": {
@@ -12,8 +14,9 @@ fetch(base + "/connect" + (localStorage.id ? `?id=${localStorage.id}` : ""), {
         console.log(response.status);
         return response.json();
     }).then(function (data) {
-        if (!localStorage.id || localStorage.id != data.id)
+        if (!localStorage.id || localStorage.id != data.id){
             localStorage.id = data.id;
+            updateTooltip();}
         channelName = data.channel;
         pusher = new Pusher('892a123070fc89c43124', {
             cluster: 'ap2'
@@ -34,7 +37,6 @@ async function signal(mes) {
     return await fetch(base + "/connect", {
         "method": "POST",
         "headers": {
-            "cache-control": "no-cache",
             "Content-Type": "application/json"
         },
         "body": JSON.stringify({ "id": mes.id, "message": mes })
