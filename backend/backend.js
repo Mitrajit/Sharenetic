@@ -16,7 +16,7 @@ var pusher = new Pusher({
     useTlS: true
 });
 
-const server = app.listen(PORT, () => console.log(`Listening on ${PORT}`));
+app.listen(PORT, () => console.log(`Listening on ${PORT}`));
 
 let whitelist = process.env.ORIGIN.split(' ');
 let corsOptions = {
@@ -44,30 +44,19 @@ app.use(errorHandler({
 
 app.get("/connect", function (req, res) {
     let id = req.query.id;
-    if (!id || CLIENT[id] != undefined)
+    if (!id)
         id = nanoidcustom();
-    CLIENT[id] = id + nanoid();
-    console.log(id + " " + CLIENT[id]);
-    res.send({ id, channel: CLIENT[id] });
+    // CLIENT[id] = id + nanoid();
+    console.log("Connected"+id);
+    res.send({ id, channel: id });
 });
 app.post("/connect", function (req, res) {
     let id = req.body.id;
     let message = req.body.message;
-    CLIENT[id] && pusher.trigger(CLIENT[id], "message", message).catch(e => console.log(e));
+    pusher.trigger(id, "message", message).catch(e => console.log(e));
     res.sendStatus(200);
 });
-// Remove in production start
-app.get("/disconnect", function (req, res) {
-    let id = req.query.id;
-    if (id && CLIENT[id] != undefined) {
-        console.log("Disconnected: " + id);
-        delete CLIENT[id];
-        res.status(200).send(`Deleted ${id}`);
-    }
-    else
-        res.sendStatus(201);
-});
-// Remove in production end
+
 app.post("/disconnect", function (req, res) {// tested
     if (req.get('x-pusher-key') == process.env.PUSHER_VERIFICATION_KEY && crypto.createHmac("sha256", process.env.PUSHER_VERIFICATION_SECRET).update(JSON.stringify(req.body)).digest("hex") == req.get('X-Pusher-Signature')) {
         req.body.events.forEach(event => {
@@ -80,38 +69,10 @@ app.post("/disconnect", function (req, res) {// tested
     }
     res.sendStatus(200); // Even send 200 for malacious request
 });
-const { Server } = require('ws');
 const nid = require("nanoid");
 const nanoid = nid.nanoid;
 const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const nanoidcustom = nid.customAlphabet(alphabet, 6);
 // const Server = require('ws').Server
 let CLIENT = {};
-const wss = new Server({
-    maxPayload: 16 * 1024, // 16KB max payload
-    server
-});
-wss.on('connection', (ws, req) => {
-    // let abc=0;
-    // CLIENT[abc]=ws;
-    if (req.url.indexOf("id=") != -1 && CLIENT[ws.id = req.url.slice(req.url.indexOf("id=") + 3)] == undefined) {
-        CLIENT[ws.id] = ws;
-    }
-    else {
-        ws.id = nanoidcustom();
-        CLIENT[ws.id] = ws;
-        ws.send(JSON.stringify({ id: ws.id }));
-    }
-    console.log(ws.id + " Connected");
-    ws.on('message', (mes) => {
-        let id = JSON.parse(mes).id;
-        CLIENT[id] && CLIENT[JSON.parse(mes).id].send(mes);
-    });
-    ws.on('close', () => {
-        delete CLIENT[ws.id];
-        console.log('Client disconnected');
-    });
-    ws.on("error", (error) => { console.log("websocket: " + error.code); });
-});
-wss.on("error", (error) => { console.log("Websocket server: " + error.code) });
 
