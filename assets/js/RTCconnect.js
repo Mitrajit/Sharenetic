@@ -208,24 +208,32 @@ var fileInput = document.querySelector('input#file');
 var webRTCMessageQueue = [];
 let sendInProgress;
 
-function initiateSending() {
+async function initiateSending() {
   console.log("Initiate sending");
   for (let i = 0; i < files.length; i++) {
     file = files[i];
     currentChunk = 0;
-    readNextChunk();
+    await readNextChunk();
   }
 }
-function readNextChunk() {
+async function readNextChunk() {
   while (BYTES_PER_CHUNK * currentChunk < file.size) {
-    console.log(currentChunk);
     let start = BYTES_PER_CHUNK * currentChunk;
     let end = Math.min(file.size, start + BYTES_PER_CHUNK);
-    let fileReader = new FileReader(); // Might saturate memory needs work
-    fileReader.readAsArrayBuffer(file.slice(start, end));
-    fileReader.onload = fileReaderonload;
+    let arrayBuffer = await readFileAsArrayBuffer(file.slice(start, end));
+    webRTCMessageQueue.push(arrayBuffer);
     currentChunk++;
+    sendMessageQueued();
   }
+}
+
+async function readFileAsArrayBuffer(f) {
+  let result_arraybuffer = await new Promise((resolve) => {
+      let fileReader = new FileReader();
+      fileReader.onload = (e) => resolve(fileReader.result);
+      fileReader.readAsArrayBuffer(f);
+  });
+  return result_arraybuffer;
 }
 
 function sendMessageQueued() {
@@ -259,11 +267,6 @@ function sendMessageQueued() {
     }
   }
 }
-
-function fileReaderonload() {
-  webRTCMessageQueue.push(this.result);
-  sendMessageQueued();
-};
 
 const sendButton = document.getElementById('Send');
 sendButton.addEventListener('click', function () {
@@ -317,7 +320,6 @@ function startDownload() {
 }
 
 async function progressDownload(data) {
-  console.log("Progressing");
   try {
     await writer.write(new Uint8Array(data));
     bytesReceived += data.byteLength;
