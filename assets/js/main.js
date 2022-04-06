@@ -22,7 +22,6 @@ var modal = document.getElementById("popup");
 function removeBackdrops(){
     Array.from(document.querySelectorAll(".modal-backdrop")).forEach(element=>element.remove());
 }
-let bs_modal = new bootstrap.Modal(modal);
 function changeModal(data) {
     removeBackdrops();
     let innerHTML =  `<div class="modal-content">
