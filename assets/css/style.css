@@ -131,10 +131,10 @@ progress[value]::-webkit-progress-value{
 }
 .full-screen-modal {
   background-color: black transparent;
-  height: 100vh;
+  height: 92vh;
   display: flex;
   align-items: center;
-   backdrop-filter: blur(4px) saturate(150%);
+  backdrop-filter: blur(4px) saturate(150%);
   justify-content: center;
 }
 .custom-modal {

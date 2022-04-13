@@ -18,27 +18,19 @@ function coppied(element) {
     }, 500);
 }
 
-var modal = document.getElementById("popup");
-function removeBackdrops(){
-    Array.from(document.querySelectorAll(".modal-backdrop")).forEach(element=>element.remove());
-}
+var modal = document.getElementById("popup-modal");
+
 function changeModal(data) {
-    removeBackdrops();
-    let innerHTML =  `<div class="modal-content">
-    <div class="modal-header">
-        <h5 class="modal-title">${data.title}</h5>
-    </div>
-    <div class="modal-body">
-        ${data.body}</div>`;
-    if (data.confirm)
-        innerHTML += `<div class="modal-footer"><button class="btn btn-primary" data-bs-dismiss="modal" onclick="sendChannel.send(JSON.stringify({confirmed:true})); removeBackdrops()">Confirm</button>
-        <button class="btn btn-danger" data-bs-dismiss="modal" onclick="sendChannel.send(JSON.stringify({confirmed:false})); downloadInProgress=false; removeBackdrops();">Deny</button>
-    </div>`;
-    modal.firstElementChild.innerHTML = innerHTML+`</div>`;
-    if(data.confirm)
-    new bootstrap.Modal(modal,{backdrop:'static',keyboard:false}).toggle();
-    else
-    bs_modal.toggle();
+  let innerHTML = `<h2>${data.title}</h2>
+  <p>${data.body}</p>`
+
+  if (data.confirm)
+    innerHTML += `<div class="button">
+        <button class="deny" onclick="denial()">Deny</button>
+        <button class="accept" onclick="accepting()">Accept</button>
+      </div>`;
+  modal.firstElementChild.innerHTML = innerHTML;
+  modal.hidden = false;
 }
 
 let file_Input = document.querySelector('.file-input');
