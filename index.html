@@ -18,30 +18,38 @@
 <body>
   <!-- Nav bar -->
   <div class="navbar navbar-dark">
-    <div class="container-fluid justify-content-end custom-nav">
-      <div class="navbar-brand ms-3 me-auto" id="custom-title">
+    <div class="container-fluid justify-content-end " id="custom-nav">
+      <p class="navbar-brand ms-3 me-auto" id="custom-title">
         Sharenetic
+      </p>
+      <div class="down-uplo">
+        <div class="iconic">
+          <i class="bi bi-arrow-up-circle ms-2 me-2"></i>
+          <span class="me-3" id="upload-spd">0.00MB/s</span>
+        </div>
+        <div class="iconic">
+          <i class="bi bi-arrow-down-circle ms-2 me-2"></i>
+          <span class="me-3" id="download-spd">0.00MB/s</span>
+        </div>
       </div>
-      <i class="bi bi-arrow-up-circle ms-2 me-2"></i>
-      <span class="me-3" id="upload-spd">0.00MB/s</span>
-      <i class="bi bi-arrow-down-circle ms-2 me-2"></i>
-      <span class="me-3" id="download-spd">0.00MB/s</span>
     </div>
   </div>
-  <div class="container box p-4">
-    <div class="input-group pb-3">
-      <input type="text" class="form-control" placeholder="Recipient's ID" aria-label="Recipient's ID"
-        aria-describedby="button-addon2" id="Recipient">
+  <div class="container box p-4 whole-body">
+    <div class="input-group pb-3 head-place">
+      <div class="recipent">
+        <input type="text" class="form-control" id="recipent-input" placeholder="Recipient's ID"
+          aria-label="Recipient's ID" aria-describedby="button-addon2" id="Recipient">
+        <button class="btn btn-secondary" type="button" id="copyid"
+          onclick="this.blur(); navigator.clipboard.writeText(localStorage.id); coppied(this)">
+          <i class="bi bi-clipboard"></i></button>
+      </div>
       <button class="btn btn-primary mx-2" type="button" id="Connect">Connect</button>
-      <button class="btn btn-secondary" type="button" id="copyid"
-        onclick="this.blur(); navigator.clipboard.writeText(localStorage.id); coppied(this)">
-        <i class="bi bi-clipboard"></i></button>
     </div>
 
 
     <label for="formFileMultiple" class="form-label">Select the file to send</label>
     <div class="input-group">
-      <div class="file-drop-area">
+      <div class="file-drop-area internal">
         <span class="fake-btn">Choose files</span>
         <span class="file-msg">or drag and drop files here</span>
         <input class="file-input" type="file" id="file" multiple>
