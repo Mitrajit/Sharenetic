@@ -184,9 +184,6 @@ progress[value]::-webkit-progress-value{
   align-items: center;
   justify-content: space-between;
 }
-.icons{
-  font-size: 20px !important;
-}
 .recipent{
   display: flex;
   flex: 1;
@@ -254,5 +251,8 @@ progress[value]::-webkit-progress-value{
   }
   #custom-nav{
     flex-direction: column;
+  }
+  .icons{
+    font-size: 22px !important;
   }
 }
