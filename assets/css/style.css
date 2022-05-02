@@ -231,7 +231,7 @@ progress[value]::-webkit-progress-value{
     margin: 5px;
     width: 100%;
   }
-  #recipent-input{
+  #Recipient{
     width: 90% !important;
   }
   #Connect{
