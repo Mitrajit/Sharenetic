@@ -232,7 +232,7 @@ progress[value]::-webkit-progress-value{
     width: 100%;
   }
   #Recipient{
-    width: 90% !important;
+    width: 80% !important;
   }
   #Connect{
     width: 100%;
