@@ -54,11 +54,12 @@ span{
   background-color: #fd7e14;
   border-color: #fd7e14;
 }
-@media screen and (max-width: 480px) {
-    button#Send{
+@media screen and (max-width: 500px) {
+  button#Send {
     margin-top: 10px;
-        margin-left: 0%!important;
+    margin-left: 0% !important;
     width: 100%;
+    border-radius: 0.25rem;
   }
 }
 .form-control, .form-control:focus, .form-control:disabled{
@@ -228,7 +229,7 @@ progress[value]::-webkit-progress-value{
     justify-content: center;
   }
   .recipent{
-    margin: 5px;
+    margin: 5px 5px 10px 0px;
     width: 100%;
   }
   #Recipient{
@@ -236,7 +237,9 @@ progress[value]::-webkit-progress-value{
   }
   #Connect{
     width: 100%;
-    border-radius: 3px;
+    border-radius: 0.25rem;
+    margin-left: 0 !important;
+    margin-right: 5px;
   }
   .file-msg{
     display: none;
