@@ -1,10 +1,10 @@
 {
-  "name": "p2p-messeging",
-  "version": "1.0.0",
+  "name": "sharenetic",
+  "version": "0.0.2",
   "description": "A file transfer service that connects peer to peer using webRTC API and uses pusher for signalling initial connection.",
   "main": "backend.js",
   "engines": {
-    "node": "14.x"
+    "node": "16.x"
   },
   "dependencies": {
     "bufferutil": "^4.0.3",
@@ -18,11 +18,17 @@
     "utf-8-validate": "^5.0.5",
     "ws": "^7.5.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@html-eslint/eslint-plugin": "^0.13.1",
+    "@html-eslint/parser": "^0.13.1",
+    "eslint": "^8.15.0",
+    "eslint-config-airbnb-base": "^15.0.0"
+  },
   "scripts": {
     "start": "node ./backend/backend.js",
     "dev": "nodemon ./backend/backend.js",
-    "debug": "nodemon --inspect ./backend/backend.js"
+    "debug": "nodemon --inspect ./backend/backend.js",
+    "lint": "eslint"
   },
   "author": "Mitrajit Chandra Chandra",
   "license": "MIT",
