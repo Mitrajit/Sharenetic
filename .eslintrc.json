@@ -1,0 +1,35 @@
+{
+    "env": {
+        "browser": true,
+        "commonjs": true,
+        "es2021": true
+    },
+    "plugins": [
+        "@html-eslint"
+    ],
+    "overrides": [
+        {
+            "files": [
+                "*.html"
+            ],
+            "parser": "@html-eslint/parser",
+            "extends": [
+                "plugin:@html-eslint/recommended"
+            ],
+            "rules":{
+                "spaced-comment":"off",
+                "max-len": ["error", { "code": 120 }]
+            }
+        }
+    ],
+    "extends": [
+        "airbnb-base"
+    ],
+    "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module"
+    },
+    "rules": {
+        "no-console": "off"
+    }
+}
