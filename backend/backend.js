@@ -41,7 +41,9 @@ app.use(errorHandler({
     dumpExceptions: true,
     showStack: true
 }));
-
+app.get("/", function(req,res){
+  res.redirect("https://mitrajit.github.io/Sharenetic/");
+});
 app.get("/connect", function (req, res) {
     let id = req.query.id;
     if (!id)
