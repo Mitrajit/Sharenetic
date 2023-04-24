@@ -16,7 +16,7 @@
     "nanoid": "^3.1.31",
     "pusher": "^5.0.0",
     "utf-8-validate": "^5.0.5",
-    "ws": "^7.5.3"
+    "ws": "^7.5.9"
   },
   "devDependencies": {
     "@html-eslint/eslint-plugin": "^0.13.1",
