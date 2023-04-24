@@ -7,7 +7,7 @@
     "node": "16.x"
   },
   "dependencies": {
-    "bufferutil": "^4.0.3",
+    "bufferutil": "^4.0.7",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "errorhandler": "^1.5.1",
