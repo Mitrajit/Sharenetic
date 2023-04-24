@@ -15,7 +15,7 @@
     "helmet": "^4.6.0",
     "nanoid": "^3.1.31",
     "pusher": "^5.0.0",
-    "utf-8-validate": "^5.0.5",
+    "utf-8-validate": "^5.0.10",
     "ws": "^7.5.3"
   },
   "devDependencies": {
